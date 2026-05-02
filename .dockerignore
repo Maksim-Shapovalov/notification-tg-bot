@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+.git
+.gitignore
+*.md
+.env
+.env.*
+!.env.example
+.dockerignore
+Dockerfile
+docker-compose*.yaml
+.cursor
+.terminals
+npm-debug.log*
+yarn-error.log*
