@@ -1,33 +1,20 @@
-# syntax=docker/dockerfile:1
-
-FROM node:22-alpine AS builder
-WORKDIR /app
-
-RUN apk add --no-cache libc6-compat \
-  && npm install -g yarn@1.22.22
-
+FROM node:lts-alpine AS builder
+WORKDIR /usr/src/app
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+RUN yarn install --frozen-lockfile --network-timeout=100000
+COPY . .
+RUN yarn build && test -f dist/main.js
 
-COPY nest-cli.json tsconfig.json tsconfig.build.json ./
-COPY src ./src
+FROM node:lts-alpine AS prod-deps
+WORKDIR /usr/src/app
+COPY package.json yarn.lock ./
+RUN yarn install --production --frozen-lockfile --network-timeout=100000 && yarn cache clean
 
-RUN yarn build
-
-FROM node:22-alpine AS production
-WORKDIR /app
-
+FROM node:lts-alpine AS prod
+WORKDIR /usr/src/app
 ENV NODE_ENV=production
-
-RUN apk add --no-cache libc6-compat \
-  && npm install -g yarn@1.22.22
-
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --production=true && yarn cache clean
-
-COPY --from=builder /app/dist ./dist
-
-RUN chown -R node:node /app
+COPY --from=prod-deps /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/dist ./dist
+RUN mkdir -p /usr/src/app/logs && chown -R node:node /usr/src/app
 USER node
-
 CMD ["node", "dist/main.js"]
