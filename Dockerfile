@@ -1,20 +1,22 @@
-FROM node:lts-alpine AS builder
+FROM node:lts AS base
 WORKDIR /usr/src/app
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --network-timeout=100000
+RUN yarn install --frozen-lockfile --network-timeout 300000
 COPY . .
-RUN yarn build && test -f dist/main.js
 
-FROM node:lts-alpine AS prod-deps
-WORKDIR /usr/src/app
-COPY package.json yarn.lock ./
-RUN yarn install --production --frozen-lockfile --network-timeout=100000 && yarn cache clean
+FROM base AS linter
+# RUN yarn lint
+
+FROM linter AS builder
+RUN yarn build
 
 FROM node:lts-alpine AS prod
 WORKDIR /usr/src/app
-ENV NODE_ENV=production
-COPY --from=prod-deps /usr/src/app/node_modules ./node_modules
+
 COPY --from=builder /usr/src/app/dist ./dist
-RUN mkdir -p /usr/src/app/logs && chown -R node:node /usr/src/app
-USER node
-CMD ["node", "dist/main.js"]
+COPY package.json yarn.lock ./
+RUN yarn install --production --frozen-lockfile --network-timeout 300000
+
+EXPOSE 3000
+
+CMD ["yarn", "start:prod"]
