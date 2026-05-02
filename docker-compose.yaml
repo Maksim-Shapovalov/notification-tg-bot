@@ -1,5 +1,6 @@
 services:
-  database:
+  # Имя сервиса = DNS в сети compose: POSTGRES_HOST=postgres (не «database»).
+  postgres:
     image: postgres:17-alpine
     container_name: notice-bot-db
     env_file:
