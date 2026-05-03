@@ -260,12 +260,14 @@ export class AppService {
   @Cron(CronExpression.EVERY_DAY_AT_NOON)
   async handleCron() {
     try {
+      this.logger.log('Starting sheet cron');
       const rows = await this.readConfiguredClientRows({
         skipHeaderRow: true,
       });
       const clearRows = rows.filter((row) =>
         isRuDateTomorrowOrDayAfterTomorrow(row.дата),
       );
+      this.logger.log(`Found ${clearRows.length} rows to notify`);
       if (clearRows.length > 0) {
         await this.sendNotifications(clearRows);
       }
