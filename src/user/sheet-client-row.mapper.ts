@@ -119,7 +119,8 @@ export function mapSheetRowToClientRow(row: string[]): ClientSheetRow | null {
     клиент: cellAt(p, 0),
     источник: cellAt(p, 1),
     дата: cellAt(p, 2),
-    ник: nickFromInstagramOrText(cellAt(p, 3)),
+    // ник: nickFromInstagramOrText(cellAt(p, 3)),
+    ник: cellAt(p, 3),
     услуга: cellAt(p, 4),
     стоимость: cellAt(p, 5),
   };
